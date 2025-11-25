@@ -1,13 +1,15 @@
-"""valedate package."""
+"""Public API surface for the valedate package."""
 
 from __future__ import annotations
 
-PACKAGE_NAME = "valedate"
+from .assertions import assert_has_diagnostic, assert_no_diagnostics, assert_only_checks
+from .harness import ValeAction, Valedate, ValeDiagnostic
 
-try:  # pragma: no cover - Rust optional
-    rust = __import__(f"_{PACKAGE_NAME}_rs")
-    hello = rust.hello  # type: ignore[attr-defined]
-except ModuleNotFoundError:  # pragma: no cover - Python fallback
-    from .pure import hello
-
-__all__ = ["hello"]
+__all__ = [
+    "ValeAction",
+    "ValeDiagnostic",
+    "Valedate",
+    "assert_has_diagnostic",
+    "assert_no_diagnostics",
+    "assert_only_checks",
+]

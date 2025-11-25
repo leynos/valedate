@@ -1,7 +1,7 @@
 MDLINT ?= markdownlint-cli2
 NIXIE ?= nixie
 MDFORMAT_ALL ?= mdformat-all
-TOOLS = $(MDFORMAT_ALL) ruff ty $(MDLINT) $(NIXIE) uv
+TOOLS = $(MDFORMAT_ALL) ruff ty $(MDLINT) uv
 VENV_TOOLS = pytest
 UV_ENV = UV_CACHE_DIR=.uv-cache UV_TOOL_DIR=.uv-tools
 
@@ -67,16 +67,17 @@ lint: ruff ## Run linters
 
 typecheck: build ty ## Run typechecking
 	ty --version
-	ty check
+	ty check valedate tests
 
 markdownlint: $(MDLINT) ## Lint Markdown files
 	$(MDLINT) '**/*.md'
 
-nixie: $(NIXIE) ## Validate Mermaid diagrams
+nixie: ## Validate Mermaid diagrams
+	$(call ensure_tool,$(NIXIE))
 	$(NIXIE) --no-sandbox
 
 test: build uv $(VENV_TOOLS) ## Run tests
-	$(UV_ENV) uv run pytest -v -n auto
+	$(UV_ENV) uv run pytest -v -n auto tests
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?##' $(MAKEFILE_LIST) | \

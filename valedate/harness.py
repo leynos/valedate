@@ -13,6 +13,7 @@ exactly as it will run in production.
 from __future__ import annotations
 
 import collections.abc as cabc
+import contextlib
 import os
 import re
 import shutil
@@ -69,6 +70,7 @@ class ValeExecutionError(ValedateError):
     """Raised when Vale returns a runtime failure."""
 
     def __init__(self, exit_code: int, stderr: str) -> None:
+        """Store the failing exit code and captured stderr."""
         super().__init__(f"Vale failed with exit code {exit_code}")
         self.exit_code = exit_code
         self.stderr = stderr
@@ -78,6 +80,7 @@ class ValeBinaryNotFoundError(FileNotFoundError, ValedateError):
     """Raised when the Vale executable cannot be located."""
 
     def __init__(self, binary: str) -> None:
+        """Build a helpful message that names the missing binary."""
         message = (
             f"Couldn't find '{binary}' on PATH. Install Vale or set vale_bin "
             "explicitly."
@@ -324,15 +327,33 @@ class Valedate:
         min_alert_level: str | None = None,
     ) -> None:
         """Build a temporary Vale sandbox with the supplied configuration."""
-        self._tmp = tempfile.TemporaryDirectory(prefix="valedate-")
-        self.root = Path(self._tmp.name)
-        self.vale_bin = _which_vale(vale_bin)
-        self._stdin_flag_supported = _vale_supports_stdin_flag(self.vale_bin)
-        self.stdin_ext = stdin_ext
-        self.default_min_level = min_alert_level
+        with contextlib.ExitStack() as stack:
+            tmp_obj = tempfile.TemporaryDirectory(prefix="valedate-")
+            stack.enter_context(tmp_obj)
+            tmp_path = Path(tmp_obj.name)
 
-        styles_dir = self.root / "styles"
-        styles_dir.mkdir(parents=True, exist_ok=True)
+            self.root = tmp_path
+            self.vale_bin = _which_vale(vale_bin)
+            self._stdin_flag_supported = _vale_supports_stdin_flag(self.vale_bin)
+            self.stdin_ext = stdin_ext
+            self.default_min_level = min_alert_level
+
+            styles_dir = self.root / "styles"
+            styles_dir.mkdir(parents=True, exist_ok=True)
+            self._populate_styles(styles_dir, styles)
+
+            ini_text = _force_styles_path(_as_ini_text(ini), styles_dirname="styles")
+            self.ini_path = self.root / ".vale.ini"
+            self.ini_path.write_text(ini_text, encoding="utf-8")
+
+            if auto_sync and re.search(r"(?m)^\s*Packages\s*=", ini_text):
+                self._run(["sync"])
+
+            # Keep the temp directory alive for the harness lifetime.
+            self._tmp = tmp_obj
+            stack.pop_all()
+
+    def _populate_styles(self, styles_dir: Path, styles: StylesLike | None) -> None:
         match styles:
             case cabc.Mapping():
                 mapping_styles = typ.cast(
@@ -350,13 +371,6 @@ class Valedate:
                     f"{type(styles).__name__}"
                 )
                 raise TypeError(msg)
-
-        ini_text = _force_styles_path(_as_ini_text(ini), styles_dirname="styles")
-        self.ini_path = self.root / ".vale.ini"
-        self.ini_path.write_text(ini_text, encoding="utf-8")
-
-        if auto_sync and re.search(r"(?m)^\s*Packages\s*=", ini_text):
-            self._run(["sync"])
 
     def lint(
         self,
@@ -469,4 +483,12 @@ class Valedate:
         return proc.stdout.decode("utf-8", "replace")
 
 
-__all__ = ["ValeAction", "ValeDiagnostic", "Valedate"]
+__all__ = [
+    "IniLike",
+    "StylesLike",
+    "ValeAction",
+    "ValeBinaryNotFoundError",
+    "ValeDiagnostic",
+    "ValeExecutionError",
+    "Valedate",
+]

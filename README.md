@@ -1,9 +1,9 @@
 # valedate
 
 Reusable Vale testing harness and pytest assertions for rule authors. The
-package bundles the `Valedate` sandbox first introduced in `concordat-vale`
-so you can lint fixtures against isolated, temporary styles trees without
-touching your global Vale configuration.
+package bundles the `Valedate` sandbox first introduced in `concordat-vale` so
+you can lint fixtures against isolated, temporary styles trees without touching
+your global Vale configuration.
 
 ## Requirements
 
@@ -35,5 +35,5 @@ with Valedate(ini, styles=styles) as env:
     assert_has_diagnostic(diags, check="Test.NoFoo")
 ```
 
-Run the test suite with `make test` to validate that your rules behave as
-Vale reports them.
+Run the test suite with `make test` to validate that your rules behave as Vale
+reports them.

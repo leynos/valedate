@@ -70,7 +70,16 @@ class ValeExecutionError(ValedateError):
     """Raised when Vale returns a runtime failure."""
 
     def __init__(self, exit_code: int, stderr: str) -> None:
-        """Store the failing exit code and captured stderr."""
+        """Initialise with Vale's failure metadata.
+
+        Parameters
+        ----------
+        exit_code : int
+            Non-zero exit status returned by the Vale process.
+        stderr : str
+            Captured standard error output from the Vale invocation.
+
+        """
         super().__init__(f"Vale failed with exit code {exit_code}")
         self.exit_code = exit_code
         self.stderr = stderr
@@ -80,11 +89,18 @@ class ValeBinaryNotFoundError(FileNotFoundError, ValedateError):
     """Raised when the Vale executable cannot be located."""
 
     def __init__(self, binary: str) -> None:
-        """Build a helpful message that names the missing binary."""
+        """Initialise with a helpful message naming the missing binary.
+
+        Parameters
+        ----------
+        binary : str
+            Executable name or path that failed lookup.
+
+        """
         message = (
             f"Couldn't find '{binary}' on PATH. Install Vale or set vale_bin "
             "explicitly."
-        )
+            )
         super().__init__(message)
 
 
@@ -326,7 +342,29 @@ class Valedate:
         auto_sync: bool = False,
         min_alert_level: str | None = None,
     ) -> None:
-        """Build a temporary Vale sandbox with the supplied configuration."""
+        """Build a temporary Vale sandbox with the supplied configuration.
+
+        Parameters
+        ----------
+        ini : IniLike
+            Raw `.vale.ini` string, a path to ini content, or a mapping that
+            will be rendered into ini text.
+        styles : StylesLike | None, optional
+            Existing `styles/` directory or in-memory mapping of style files to
+            contents. When ``None``, only built-in styles are available.
+        vale_bin : str, default "vale"
+            Vale executable name or explicit path to invoke.
+        stdin_ext : str, default ".md"
+            Extension associated with stdin content so Vale chooses the
+            correct lexer.
+        auto_sync : bool, default False
+            When true and the ini declares packages, run ``vale sync`` once
+            after setup.
+        min_alert_level : str | None, optional
+            Default ``--minAlertLevel`` applied to all lint operations unless
+            overridden per call.
+
+        """
         with contextlib.ExitStack() as stack:
             tmp_obj = tempfile.TemporaryDirectory(prefix="valedate-")
             stack.enter_context(tmp_obj)
@@ -349,7 +387,10 @@ class Valedate:
             if auto_sync and re.search(r"(?m)^\s*Packages\s*=", ini_text):
                 self._run(["sync"])
 
-            # Keep the temp directory alive for the harness lifetime.
+            # TemporaryDirectory is entered via ExitStack so it is cleaned if
+            # any setup step fails. Once initialisation succeeds, the object is
+            # stored on self._tmp and pop_all() transfers ownership so cleanup
+            # occurs when the harness calls self._tmp.cleanup().
             self._tmp = tmp_obj
             stack.pop_all()
 

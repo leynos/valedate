@@ -100,7 +100,7 @@ class ValeBinaryNotFoundError(FileNotFoundError, ValedateError):
         message = (
             f"Couldn't find '{binary}' on PATH. Install Vale or set vale_bin "
             "explicitly."
-            )
+        )
         super().__init__(message)
 
 

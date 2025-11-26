@@ -4,10 +4,15 @@ version = "0.1.0-beta1"
 description = "valedate package"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT" }
+license = { text = "ISC" }
+authors = [{ name = "Payton McIntosh", email = "pmcintosh@df12.net" }]
 dependencies = [
     "msgspec>=0.18.6",
 ]
+
+[project.urls]
+Homepage = "https://df12.studio/docs.html"
+Repository = "https://github.com/leynos/valedate"
 
 [dependency-groups]
 dev = [
@@ -17,11 +22,6 @@ dev = [
     "pyright",
     "pytest-timeout",
 ]
-
-[tool.pyright]
-pythonVersion = "3.13"
-typeCheckingMode = "strict"
-include = ["valedate"]
 
 [tool.ruff]
 line-length = 88

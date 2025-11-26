@@ -298,6 +298,6 @@ dev = [
     { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-timeout" },
-    { name = "pytest-xdist" },
+    { name = "pytest-xdist", specifier = ">=3.0" },
     { name = "ruff" },
 ]

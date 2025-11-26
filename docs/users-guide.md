@@ -1,9 +1,8 @@
 # valedate users' guide
 
-Use `valedate` to exercise Vale rulesets inside pytest. The harness spins up
-an isolated working directory with its own `.vale.ini` and `styles/` tree,
-invokes the real `vale` binary, and returns structured diagnostics to assert
-against.
+Use `valedate` to exercise Vale rulesets inside pytest. The harness spins up an
+isolated working directory with its own `.vale.ini` and `styles/` tree, invokes
+the real `vale` binary, and returns structured diagnostics to assert against.
 
 ## Prerequisites
 
@@ -39,8 +38,8 @@ with Valedate(ini, styles=styles) as env:
 
 Provide styles either as a `Path` to an existing `styles` directory or as a
 mapping of relative file paths to string/byte contents. The harness injects
-`StylesPath = styles` into the generated `.vale.ini` so you do not need to
-set it yourself.
+`StylesPath = styles` into the generated `.vale.ini` so you do not need to set
+it yourself.
 
 ## Assertion helpers
 
@@ -58,8 +57,8 @@ when refining rules.
 
 ## Using `min_alert_level`
 
-Set `min_alert_level` on the harness or per call to mirror
-`--minAlertLevel` behaviour:
+Set `min_alert_level` on the harness or per call to mirror `--minAlertLevel`
+behaviour:
 
 ```python
 with Valedate(ini, styles=styles, min_alert_level="error") as env:
@@ -69,5 +68,5 @@ with Valedate(ini, styles=styles, min_alert_level="error") as env:
 ## Cleaning up
 
 The harness acts as a context manager and cleans up its temporary directory on
-exit. If you construct it outside a `with` block, call `cleanup()` once you
-are finished to remove the sandbox.
+exit. If you construct it outside a `with` block, call `cleanup()` once you are
+finished to remove the sandbox.

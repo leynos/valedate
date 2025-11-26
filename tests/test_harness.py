@@ -17,6 +17,7 @@ if typ.TYPE_CHECKING:
 
 
 def _ini() -> dict[str, object]:
+    """Return the default .vale.ini configuration used in tests."""
     return {
         "__root__": {"MinAlertLevel": "suggestion"},
         "[*.md]": {"BasedOnStyles": "Test"},
@@ -24,6 +25,7 @@ def _ini() -> dict[str, object]:
 
 
 def _rule(level: str = "warning") -> str:
+    """Return a YAML rule string for tests."""
     return textwrap.dedent(
         f"""
         extends: existence
@@ -37,10 +39,11 @@ def _rule(level: str = "warning") -> str:
 
 
 def _styles(level: str = "warning") -> dict[str, str]:
+    """Return mapping of style file name to rule body for the level."""
     return {"Test/NoFoo.yml": _rule(level)}
 
 
-def test_lint_reports_configured_rule(tmp_path: Path) -> None:
+def test_lint_reports_configured_rule() -> None:
     """Lint should surface diagnostics for the configured style."""
     with Valedate(_ini(), styles=_styles()) as env:
         diags = env.lint("foo should trigger a diagnostic.")

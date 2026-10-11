@@ -39,17 +39,11 @@ PREPARE_TARGETS: tuple[str, ...] = ("prepare",)
 # Every Makefile line that mentions uv without going through the helper. A new
 # mention fails the test until it is reviewed and added here.
 ALLOWED_UV_LINES: tuple[str, ...] = (
-    "$(error UV=$(UV) is not an executable file)",
-    "$(error UV=$(UV) must be named uv)",
-    "$(error UV=$(UV) must be uv or a path to an executable file named uv)",
     "TOOLS = ruff ty $(MDLINT) $(MDTABLEFIX) uv",
     "UV ?= uv",
+    "UV_SELECTION_CHECK := $(if $(filter command line environment,$(origin UV)),$(if $(filter uv,$(UV)),,$(if $(findstring /,$(UV)),$(if $(shell test -f '$(UV)' -a -x '$(UV)' && printf y),$(if $(filter uv,$(notdir $(UV))),,$(error UV=$(UV) must be named uv)),$(error UV=$(UV) is not an executable file)),$(error UV=$(UV) must be uv or a path to an executable file named uv))))",  # noqa: E501
     "build: uv prepare",
     "export PATH := $(if $(findstring /,$(UV)),$(patsubst %/,%,$(dir $(UV))):)$(PATH)",
-    "ifeq ($(findstring /,$(UV)),)",
-    "ifeq ($(shell test -f '$(UV)' -a -x '$(UV)' && printf y),)",
-    "ifneq ($(UV),uv)",
-    "ifneq ($(notdir $(UV)),uv)",
     "test: build uv $(VENV_TOOLS)",
 )
 MAKE = shutil.which("make")

@@ -1,0 +1,6 @@
+repository = "leynos/valedate"
+interpreter = "3.13"
+
+# What the ratchet baseline measures: the package, not its tests.
+[selection]
+python-source = "./valedate"

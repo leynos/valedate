@@ -20,7 +20,10 @@ CodeScene or holds its credential.
   CodeScene project exists.
 - **Known exception.** Merges made with `GITHUB_TOKEN`, such as Dependabot
   automerge, fire no push event, so they reach the publisher only through a
-  later push or a manual dispatch.
+  later push or a manual dispatch. A manual dispatch uploads coverage but does
+  not save the ratchet baseline, which the shared action writes only on a push
+  to `main`; pull requests keep comparing against the older baseline until a
+  later push advances it.
 
 The `generate-coverage` selection in both workflows must match field for field
 (`python-source`, format and interpreter), and `.github/cv005.toml` repeats the

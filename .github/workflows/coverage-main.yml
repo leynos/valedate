@@ -97,6 +97,10 @@ jobs:
         id: codescene-token
         run: echo "available=${{ secrets.CS_ACCESS_TOKEN != '' }}" >> "$GITHUB_OUTPUT"
 
+      - name: Report skipped CodeScene upload
+        if: steps.codescene-token.outputs.available != 'true'
+        run: echo "::warning::CodeScene coverage was not published because the environment token is unavailable."
+
       # The ref as well as the token: a dispatch can name any branch. The token
       # goes straight to the input rather than through `env`, which the
       # composite uploader would hand to its nested steps.

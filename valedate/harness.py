@@ -42,6 +42,7 @@ class InvalidIniSectionError(ValedateError):
     """Raised when a pseudo-section does not map to key/value content."""
 
     def __init__(self, section: str) -> None:
+        """Name the offending pseudo-section in the message."""
         super().__init__(f"Section {section!r} must map to a dict of key/value pairs.")
 
 
@@ -49,6 +50,7 @@ class UnsupportedIniInputError(ValedateError):
     """Raised when the ini argument is of an unsupported type."""
 
     def __init__(self) -> None:
+        """Build the fixed message listing the accepted ini inputs."""
         super().__init__("ini must be a path, raw ini string, or mapping")
 
 
@@ -56,6 +58,7 @@ class StylesTreeMissingError(ValedateError):
     """Raised when the requested styles directory is absent."""
 
     def __init__(self, styles: Path) -> None:
+        """Name the missing styles directory in the message."""
         super().__init__(f"Styles tree {styles} doesn't exist")
 
 
@@ -63,6 +66,7 @@ class StylesTreeTypeError(ValedateError):
     """Raised when the styles argument resolves to a non-directory."""
 
     def __init__(self, styles: Path) -> None:
+        """Name the non-directory styles path in the message."""
         super().__init__(f"Styles tree {styles} must be a directory")
 
 
@@ -162,6 +166,7 @@ class ValeDiagnostic(msgspec.Struct, kw_only=True):
 
 
 def _which_vale(vale_bin: str) -> str:
+    """Resolve the Vale executable on `PATH`, or raise if it is not installed."""
     path = shutil.which(vale_bin)
     if path is None:
         raise ValeBinaryNotFoundError(vale_bin)
@@ -244,6 +249,7 @@ def _as_ini_text(ini: IniLike) -> str:
 
 
 def _force_styles_path(ini_text: str, styles_dirname: str = "styles") -> str:
+    """Point `StylesPath` at the staged styles directory, adding the key if absent."""
     pattern = r"(?m)^\s*StylesPath\s*=.*$"
     if re.search(pattern, ini_text):
         return re.sub(pattern, f"StylesPath = {styles_dirname}", ini_text)
@@ -251,6 +257,7 @@ def _force_styles_path(ini_text: str, styles_dirname: str = "styles") -> str:
 
 
 def _materialise_tree(root: Path, mapping: typ.Mapping[str, str | bytes]) -> None:
+    """Write each relative path of `mapping` under `root`, making parent directories."""
     for rel_path, contents in mapping.items():
         destination = root / rel_path
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -268,6 +275,7 @@ def _materialise_tree(root: Path, mapping: typ.Mapping[str, str | bytes]) -> Non
 
 
 def _copy_styles_into(dst: Path, styles: Path) -> None:
+    """Copy an existing styles directory into `dst`, merging with what is there."""
     if not styles.exists():
         raise StylesTreeMissingError(styles)
     if not styles.is_dir():
@@ -281,9 +289,14 @@ def _copy_styles_into(dst: Path, styles: Path) -> None:
 
 
 def _decode_vale_json(stdout: str) -> dict[str, list[ValeDiagnostic]]:
+    """Decode Vale's JSON output into diagnostics keyed by file path.
+
+    Accepts the mapping form, the list-of-files form, and a bare alert list (stdin).
+    """
     value = msjson.decode(stdout)
 
     def _to_alerts(seq: object) -> list[ValeDiagnostic]:
+        """Convert raw alert objects to `ValeDiagnostic` values."""
         return msgspec.convert(seq, type=list[ValeDiagnostic])
 
     match value:
@@ -395,6 +408,7 @@ class Valedate:
             stack.pop_all()
 
     def _populate_styles(self, styles_dir: Path, styles: StylesLike | None) -> None:
+        """Stage `styles` (a mapping, a path, or nothing) into `styles_dir`."""
         match styles:
             case cabc.Mapping():
                 mapping_styles = typ.cast(

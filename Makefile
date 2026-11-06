@@ -26,6 +26,10 @@ endif
 # only parameters.
 CV005_CONTRACTS_REF ?= 5a99aed78ce68dcebd3052b75c31e6f173162b1e
 CV005_CONTRACTS = $(UV_GATE) tool --python 3.13 --from 'git+https://github.com/leynos/shared-actions@$(CV005_CONTRACTS_REF)\#subdirectory=packages/cv005-contracts' -- cv005-contracts
+# Docstring presence for the package and the tests. `scripts/uv_gate.py` is the
+# shared-actions helper, vendored byte for byte and audited against its digest, so
+# it is not edited here. Ruff keeps docstring style.
+INTERROGATE_TARGETS ?= valedate tests
 MDLINT ?= markdownlint-cli2
 NIXIE ?= nixie
 TOOLS = ruff ty $(MDLINT) $(MDTABLEFIX) uv
@@ -99,6 +103,7 @@ check-fmt: ruff $(MDTABLEFIX) ## Verify formatting
 
 lint: ruff ## Run linters
 	ruff check
+	$(UV_GATE) run -- interrogate --fail-under 100 $(INTERROGATE_TARGETS)
 
 typecheck: build ty ## Run typechecking
 	ty --version

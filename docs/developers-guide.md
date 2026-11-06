@@ -39,3 +39,13 @@ Always pin a full 40-character commit: a fix to the contract arrives as a pin
 bump, never as a local copy of the rules. The command exits 0 when every clause
 holds, 1 with one `clause: message` line per violation, and 2 when the tree or
 the configuration cannot be read.
+
+## Docstring coverage
+
+`make lint` first runs `make interrogate`, which needs `uv` and fails on any
+Python definition under `valedate`, `tests` and `scripts` without a docstring.
+It also fails on any `MISSED` row, because interrogate rounds its percentage to
+one decimal and so passes a lone gap. `scripts/uv_gate.py` is the vendored
+shared-actions helper; it is not edited here, and it ships with complete
+docstrings. Add a new Python directory to `INTERROGATE_TARGETS`;
+`tests/test_interrogate_gate.py` asserts the wiring.

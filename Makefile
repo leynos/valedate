@@ -26,10 +26,6 @@ endif
 # only parameters.
 CV005_CONTRACTS_REF ?= 5a99aed78ce68dcebd3052b75c31e6f173162b1e
 CV005_CONTRACTS = $(UV_GATE) tool --python 3.13 --from 'git+https://github.com/leynos/shared-actions@$(CV005_CONTRACTS_REF)\#subdirectory=packages/cv005-contracts' -- cv005-contracts
-# Docstring presence for the package and the tests. `scripts/uv_gate.py` is the
-# shared-actions helper, vendored byte for byte and audited against its digest, so
-# it is not edited here. Ruff keeps docstring style.
-INTERROGATE_TARGETS ?= valedate tests
 MDLINT ?= markdownlint-cli2
 NIXIE ?= nixie
 TOOLS = ruff ty $(MDLINT) $(MDTABLEFIX) uv
@@ -45,7 +41,7 @@ MDTABLEFIX_SELECT = --git --include-untracked
 MDTABLEFIX_RULES = --wrap --renumber --breaks --ellipsis --fences
 
 .PHONY: prepare help all clean build build-release lint fmt check-fmt \
-        markdownlint nixie test typecheck test-workflow-contracts $(TOOLS) $(VENV_TOOLS)
+        markdownlint nixie test typecheck test-workflow-contracts $(TOOLS) $(VENV_TOOLS) interrogate
 
 prepare: ## Install the locked development environment, offline first
 	$(UV_GATE) prepare --group dev
@@ -101,9 +97,35 @@ check-fmt: ruff $(MDTABLEFIX) ## Verify formatting
 	ruff format --check
 	$(MDTABLEFIX) --check $(MDTABLEFIX_SELECT) $(MDTABLEFIX_RULES)
 
-lint: ruff ## Run linters
+# Interrogate measures docstring presence over the Python files it scans under
+# INTERROGATE_TARGETS (it skips some path prefixes by default, so check a new
+# file against the verbose report). Add a new Python directory to the targets.
+# No `--python` pin: a managed interpreter would be downloaded, and a PyO3
+# build could link it.
+# `scripts/uv_gate.py` is the shared-actions helper, vendored byte for byte, so
+# it is not edited here; it ships with complete docstrings, so the gate covers
+# it. Ruff keeps docstring style.
+INTERROGATE_VERSION ?= 1.7.0
+INTERROGATE_TARGETS ?= valedate tests scripts
+# Level 2 prints a MISSED row per undocumented definition, which the
+# `interrogate` target fails on: the rounded percentage alone passes a lone gap.
+INTERROGATE_FLAGS ?= -vv --fail-under 100
+INTERROGATE = $(UV_GATE) tool --from 'interrogate==$(INTERROGATE_VERSION)' -- interrogate
+
+# Interrogate rounds its percentage to one decimal, so `--fail-under 100` alone
+# passes a lone gap in a large repository; fail on any MISSED row as well.
+interrogate: ## Enforce complete Python docstring coverage
+	@report="$$($(INTERROGATE) $(INTERROGATE_FLAGS) $(INTERROGATE_TARGETS))"; \
+	  status=$$?; \
+	  printf '%s\n' "$$report"; \
+	  test "$$status" -eq 0 || exit "$$status"; \
+	  if printf '%s\n' "$$report" | grep -q '| *MISSED *|'; then \
+	    printf '%s\n' 'interrogate: undocumented definitions remain; see the MISSED rows above' >&2; \
+	    exit 1; \
+	  fi
+
+lint: interrogate ruff ## Run linters
 	ruff check
-	$(UV_GATE) run -- interrogate --fail-under 100 $(INTERROGATE_TARGETS)
 
 typecheck: build ty ## Run typechecking
 	ty --version

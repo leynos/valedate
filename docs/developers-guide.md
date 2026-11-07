@@ -49,7 +49,7 @@ percentage to one decimal and so can pass a lone gap in a sufficiently large
 codebase. Interrogate 1.7.0 skips a path whose first component below a target
 begins with `.tox`, `.venv`, `venv`, `.git` or `.hg`, so
 `tests/test_interrogate_gate.py` fails if a tracked Python file sits at such a
-name directly under a target. `scripts/uv_gate.py` is the vendored
-shared-actions helper; it is not edited here, and it ships with complete
-docstrings. Add a new Python directory to `INTERROGATE_TARGETS`; the same test
-asserts the wiring.
+name, or in a directory of that name, directly under a target.
+`scripts/uv_gate.py` is the vendored shared-actions helper; it is not edited
+here, and it ships with complete docstrings. Add a new Python directory to
+`INTERROGATE_TARGETS`; the same test asserts the wiring.

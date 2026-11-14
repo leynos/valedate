@@ -89,6 +89,8 @@ When implementing changes, adhere to the following testing procedures:
   - For Markdown files (`.md` only):
     - **Linting:** Passes lint checks (`make markdownlint`).
     - **Mermaid diagrams:** Passes validation using nixie (`make nixie`)
+  - For `Makefile` changes:
+    - **Validation:** Passes `mbake validate Makefile`, which CI runs.
 - **Committing:**
   - Only changes that meet all the quality gates above should be committed.
   - Write clear, descriptive commit messages summarizing the change, following
